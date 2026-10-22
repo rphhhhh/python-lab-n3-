@@ -1,0 +1,36 @@
+Система анализа серверных логов и поиск аномалий
+Вы — junior-системный администратор. Система мониторинга дала сбой,
+но успела сохранить «сырой» дамп сетевых логов в виде списка строк. Вам
+нужно написать скрипт, который распарсит эти логи, подсчитает
+количество запросов с каждого IP-адреса, отдельно посчитает количество
+ошибок (ERROR) и выведет красивый отчет, выделив IP-адрес, который
+выглядит как хакерская атака.
+import time
+
+raw_logs = [
+    "192.168.1.10 | INFO | Login successful", "10.0.0.5 | ERROR | Connection timeout",
+    "192.168.1.10 | INFO | File downloaded", "10.0.0.5 | ERROR | Access denied",
+    "172.16.0.1 | WARN | High memory usage", "10.0.0.5 | ERROR | Brute force detected",
+    "192.168.1.10 | ERROR | Disk full", "172.16.0.1 | INFO | Backup completed",
+    "10.0.0.5 | ERROR | Port scan blocked"
+]
+
+i = 0
+while i < 3: print("Разбор логов" + "." * (i := i + 1)); time.sleep(0.5)
+
+total_requests, error_counts = {}, {}
+for log in raw_logs:
+    ip, level, _ = log.split(" | ")
+    total_requests[ip] = total_requests.get(ip, 0) + 1
+    if level == "ERROR": error_counts[ip] = error_counts.get(ip, 0) + 1
+
+top_ip, top = None, -1
+for ip, n in error_counts.items():
+    if n > top: top_ip, top = ip, n
+
+line = "+" + "-" * 57 + "+"
+print(f"\n{line}\n| {'IP-адрес':<14} | {'Запросов':^8} | {'Ошибок':^8} | {'Статус':<16} |\n{line}")
+for ip, total in total_requests.items():
+    e = error_counts.get(ip, 0)
+    print(f"| {ip:<14} | {total:^8} | {e:^8} | {'Чистый' if e == 0 else 'Подозрительный' if e <= 2 else 'Угроза / Хакер':<16} |")
+print(f"{line}\nВозможная хакерская атака: {top_ip} ({top} ошибок)")
